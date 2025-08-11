@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Happy 7 Month</title>
+  <style>
+    :root {
+      --bg: #fff7fb;
+      --fg: #111827;
+      --accent: #ef476f;
+      --btn-bg: #111827;
+      --btn-fg: #ffffff;
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+      color: var(--fg);
+      background: radial-gradient(1200px 800px at 20% -10%, #ffe3ec 0%, transparent 60%),
+                  radial-gradient(900px 700px at 120% 10%, #e3fff5 0%, transparent 60%),
+                  var(--bg);
+      display: grid; place-items: center;
+    }
+    .card {
+      max-width: 900px;
+      width: min(92vw, 1000px);
+      padding: clamp(18px, 4vw, 40px);
+      background: rgba(255,255,255,0.9);
+      border-radius: 28px;
+      text-align: center;
+      position: relative;
+      overflow: visible;
+    }
+    h1 {
+      font-size: clamp(36px, 7vw, 84px);
+      line-height: 1.05;
+      margin: 0 0 10px;
+      letter-spacing: -0.02em;
+    }
+    .accent { color: var(--accent); }
+    .tagline {
+      font-size: clamp(20px, 3.5vw, 36px);
+      opacity: 0.9; margin: 6px 0 24px;
+    }
+    .buttons {
+      position: relative;
+      margin: 10px auto 0;
+      width: min(90%, 540px);
+      height: 180px;
+      padding: 12px;
+      overflow: hidden;
+      background: transparent;
+    }
+    button {
+      appearance: none; border: none; cursor: pointer;
+      font-weight: 700; letter-spacing: 0.01em;
+      padding: 14px 24px; border-radius: 999px;
+      transition: transform 0.08s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease, left 0.15s ease, top 0.15s ease;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+      font-size: clamp(16px, 2.5vw, 22px);
+      position: absolute;
+      z-index: 1;
+    }
+    #yesBtn { background: var(--btn-bg); color: var(--btn-fg); }
+    #yesBtn:hover { transform: translateY(-1px) scale(1.02); }
+    #yesBtn:active { transform: translateY(1px) scale(0.98); }
+
+    #noBtn {
+      background: #ffffff; color: var(--fg);
+      border: 2px solid #e5e7eb;
+      touch-action: none;
+    }
+
+    .float-heart {
+      position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
+      font-size: clamp(24px, 4vw, 40px); opacity: 0.25; user-select: none;
+      animation: bob 3s ease-in-out infinite; pointer-events: none;
+    }
+    @keyframes bob { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -8px); } }
+    .footer-note { margin-top: 18px; font-size: 14px; opacity: 0.6; }
+  </style>
+</head>
+<body>
+  <main class="card" id="card">
+    <div class="float-heart">💖</div>
+    <h1><span class="accent">HAPPY 7 MONTH.</span></h1>
+    <p class="tagline">Do you still love me?</p>
+
+    <div class="buttons" id="buttonContainer">
+      <button id="yesBtn" aria-label="Yes">Yes 💘</button>
+      <button id="noBtn" aria-label="No">No 😅</button>
+    </div>
+
+    <div class="footer-note">(Psst… try hovering over “No” 😏)</div>
+  </main>
+
+  <script>
+    const container = document.getElementById('buttonContainer');
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn = document.getElementById('noBtn');
+
+    function placeInitialButtons() {
+      const btnHeight = noBtn.offsetHeight;
+      const btnTop = (container.offsetHeight - btnHeight) / 2;
+      const totalWidth = yesBtn.offsetWidth + 16 + noBtn.offsetWidth;
+      const startLeft = (container.offsetWidth - totalWidth) / 2;
+
+      yesBtn.style.left = startLeft + 'px';
+      yesBtn.style.top = btnTop + 'px';
+
+      noBtn.style.left = (startLeft + yesBtn.offsetWidth + 16) + 'px';
+      noBtn.style.top = btnTop + 'px';
+    }
+
+    function getContainerPadding() {
+      const cs = getComputedStyle(container);
+      return {
+        left: parseFloat(cs.paddingLeft) || 0,
+        right: parseFloat(cs.paddingRight) || 0,
+        top: parseFloat(cs.paddingTop) || 0,
+        bottom: parseFloat(cs.paddingBottom) || 0,
+      };
+    }
+
+    function rectToContainerCoords(rect, containerRect) {
+      return {
+        left: rect.left - containerRect.left,
+        top: rect.top - containerRect.top,
+        right: rect.right - containerRect.left,
+        bottom: rect.bottom - containerRect.top,
+        width: rect.width,
+        height: rect.height
+      };
+    }
+
+    function overlap(a, b) {
+      return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+    }
+
+    function moveNoButton() {
+      const pad = getContainerPadding();
+      const cW = container.clientWidth - pad.left - pad.right;
+      const cH = container.clientHeight - pad.top - pad.bottom;
+
+      const btnW = noBtn.offsetWidth;
+      const btnH = noBtn.offsetHeight;
+
+      const minX = pad.left;
+      const minY = pad.top;
+      const maxX = pad.left + cW - btnW;
+      const maxY = pad.top + cH - btnH;
+
+      const containerRect = container.getBoundingClientRect();
+      const yesRect = rectToContainerCoords(yesBtn.getBoundingClientRect(), containerRect);
+
+      let tries = 0, x = minX, y = minY;
+      const curLeft = parseFloat(noBtn.style.left || 0);
+      const curTop = parseFloat(noBtn.style.top || 0);
+
+      do {
+        x = Math.floor(minX + Math.random() * (maxX - minX));
+        y = Math.floor(minY + Math.random() * (maxY - minY));
+        const proposed = { left: x, top: y, right: x + btnW, bottom: y + btnH };
+        tries++;
+        if (!overlap(proposed, yesRect) && Math.hypot(curLeft - x, curTop - y) > 40) break;
+      } while (tries < 60);
+
+      noBtn.style.left = x + 'px';
+      noBtn.style.top = y + 'px';
+    }
+
+    noBtn.addEventListener('pointerenter', moveNoButton);
+    noBtn.addEventListener('touchstart', (e) => { e.preventDefault(); moveNoButton(); }, { passive: false });
+
+    window.addEventListener('resize', placeInitialButtons);
+    window.addEventListener('load', placeInitialButtons);
+
+    yesBtn.addEventListener('click', () => {
+      const yayHtml = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>YAYYYYY!</title>
+<style>
+  html, body { height: 100%; }
+  body {
+    margin: 0; display: grid; place-items: center; background: #fffdf5; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
+    overflow: hidden;
+  }
+  .wrap { text-align: center; }
+  h1 { font-size: clamp(42px, 8vw, 120px); margin: 0 0 10px; letter-spacing: -0.02em; }
+  .accent { color: #06d6a0; }
+  p { font-size: clamp(20px, 3.5vw, 40px); margin: 0; }
+  .confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+  .confetti span { position: absolute; top: -10vh; width: 12px; height: 12px; border-radius: 2px; background: currentColor; opacity: 0.9; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(120vh) rotate(720deg); } }
+</style>
+</head>
+<body>
+  <div class="confetti" id="confetti"></div>
+  <div class="wrap">
+    <h1><span class="accent">YAYYYYY.</span></h1>
+    <p>I LOVE YOU TOO 💖</p>
+    <img src='IMG_3543.PNG' alt='Us' style='max-width: 320px; width: 80%; margin-top: 12px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);'>
+  </div>
+  <script>
+    const colors = ['#ef476f','#ffd166','#06d6a0','#118ab2','#073b4c'];
+    const confetti = document.getElementById('confetti');
+    const count = Math.min(250, Math.floor(window.innerWidth / 3));
+    for (let i = 0; i < count; i++) {
+      const s = document.createElement('span');
+      s.style.left = Math.random() * 100 + 'vw';
+      s.style.color = colors[i % colors.length];
+      s.style.animationDuration = (6 + Math.random() * 4).toFixed(2) + 's';
+      s.style.animationDelay = (Math.random() * 2).toFixed(2) + 's';
+      s.style.transform = 'translateY(-10vh) rotate(' + (Math.random()*360) + 'deg)';
+      confetti.appendChild(s);
+    }
+  <\/script>
+</body>
+</html>`;
+      document.open();
+      document.write(yayHtml);
+      document.close();
+    });
+  </script>
+</body>
+</html>
